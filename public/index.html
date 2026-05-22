@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neon Cosmos | Desktop Game Demo</title>
+  <!-- Google Fonts for retro synthwave look -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="desktop-body">
+  <!-- Glowing CRT-style scanline overlay -->
+  <div class="crt-overlay"></div>
+
+  <!-- Background neon grid (decorative) -->
+  <div class="grid-container" id="gridContainer">
+    <div class="grid-plane grid-floor"></div>
+    <div class="grid-plane grid-ceiling"></div>
+  </div>
+
+  <!-- Space dust particle canvas for background parallax -->
+  <canvas id="bgCanvas" class="bg-canvas"></canvas>
+
+  <!-- Setup/Pairing Screen -->
+  <div id="setupScreen" class="overlay-screen active">
+    <header class="game-header">
+      <h1 class="neon-title glow-magenta">NEON COSMOS</h1>
+      <p class="subtitle glow-cyan">MOBILE TILT SENSOR CONTROLLER DEMO</p>
+    </header>
+
+    <div class="setup-container">
+      <div class="instruction-box">
+        <h2 class="section-title">PILOT ONBOARDING</h2>
+        <ol class="instruction-list">
+          <li>Ensure your mobile device is connected to the <strong>same Wi-Fi network</strong>.</li>
+          <li>Scan the QR code, or open the link below.</li>
+          <li><strong>Note</strong>: This local server runs over HTTPS for sensor security. Click <strong>Advanced/Show Details</strong> and select <strong>Proceed/Visit Website</strong> to accept the temporary self-signed certificate!</li>
+          <li>Choose <strong>TILT FLIGHT</strong>, allow device orientation permissions, then steer!</li>
+        </ol>
+        
+        <div class="connection-status-box">
+          <div class="status-indicator">
+            <span class="status-dot pulsing-red" id="statusDot"></span>
+            <span class="status-text" id="statusText">WAITING FOR PILOT...</span>
+          </div>
+          <div class="room-code-display">
+            <span class="label">ROOM CODE</span>
+            <span class="code" id="roomCodeVal">----</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="qr-box">
+        <div class="qr-frame">
+          <div id="qrcode" class="qr-image-placeholder">
+            <!-- Dynamically populated QR Code -->
+            <div class="loader"></div>
+          </div>
+        </div>
+        <div class="qr-url-text" id="joinUrlVal">Detecting local network...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Game Layout -->
+  <main id="gameContainer" class="game-container hidden">
+    <!-- Real-time HUD -->
+    <div class="hud">
+      <div class="hud-left">
+        <div class="hud-item score-box">
+          <span class="hud-label">SCORE</span>
+          <span class="hud-value glow-cyan" id="scoreVal">000000</span>
+        </div>
+        <div class="hud-item speed-box">
+          <span class="hud-label">SPEED</span>
+          <span class="hud-value glow-blue" id="speedVal">0 km/h</span>
+        </div>
+      </div>
+
+      <div class="hud-center">
+        <div class="hud-indicator" id="boostIndicator">
+          <span class="hud-label">THRUST BOOST ACTIVE</span>
+        </div>
+      </div>
+
+      <div class="hud-right">
+        <!-- Shield bar -->
+        <div class="hud-bar-container">
+          <div class="hud-label-row">
+            <span>SHIELD INTEGRITY</span>
+            <span id="shieldText">100%</span>
+          </div>
+          <div class="hud-bar">
+            <div class="hud-bar-fill shield-fill" id="shieldFill"></div>
+          </div>
+        </div>
+        <!-- Energy bar -->
+        <div class="hud-bar-container">
+          <div class="hud-label-row">
+            <span>BOOST ENERGY</span>
+            <span id="energyText">100%</span>
+          </div>
+          <div class="hud-bar">
+            <div class="hud-bar-fill energy-fill" id="energyFill"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active controller tag -->
+    <div class="controller-tag">
+      <span class="tag-icon">🎮</span> Controller: <span id="controllerName">TILT ACTIVE</span>
+    </div>
+
+    <!-- Main HTML5 Canvas -->
+    <canvas id="gameCanvas"></canvas>
+  </main>
+
+  <!-- Game Over Screen -->
+  <div id="gameOverScreen" class="overlay-screen hidden">
+    <h2 class="neon-title glow-red text-center">SYSTEM FAILURE</h2>
+    <p class="subtitle glow-magenta text-center">YOUR SPACESHIP WAS DESTROYED</p>
+    
+    <div class="stats-card">
+      <div class="stats-row">
+        <span>FINAL SCORE:</span>
+        <span class="stats-value glow-cyan" id="finalScoreVal">0</span>
+      </div>
+      <div class="stats-row">
+        <span>CRYSTALS COLLECTED:</span>
+        <span class="stats-value glow-magenta" id="finalCrystalsVal">0</span>
+      </div>
+    </div>
+
+    <div class="restart-prompt font-mono">
+      WAITING FOR PILOT RESTART...
+    </div>
+  </div>
+
+  <!-- Socket.io client -->
+  <script src="/socket.io/socket.io.js"></script>
+  <!-- Main Desktop Game Logic -->
+  <script src="/desktop.js"></script>
+</body>
+</html>

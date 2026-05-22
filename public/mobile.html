@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cockpit Controller | Neon Cosmos</title>
+  <!-- Google Fonts for retro synthwave look -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="mobile-body">
+  <!-- Scanline filter for retro vibes -->
+  <div class="crt-overlay"></div>
+
+  <!-- Onboarding / Permissions overlay screen -->
+  <div id="permissionOverlay" class="mobile-overlay">
+    <h1 class="controller-logo glow-magenta">NEON PILOT</h1>
+    <p class="controller-setup-desc">
+      Prepare for launch. Sensor controls require a secure HTTPS connection. Please accept the temporary self-signed SSL certificate warning if prompted, or choose touch fallback.
+    </p>
+    
+    <!-- Gyro Sensor Connection -->
+    <button id="gyroBtn" class="mobile-btn">
+      ENABLE TILT FLIGHT
+    </button>
+    
+    <!-- Fallback Joystick Connection -->
+    <button id="joystickBtn" class="mobile-btn btn-secondary">
+      USE TOUCH TRACKPAD
+    </button>
+  </div>
+
+  <!-- Main Cockpit Interface -->
+  <div class="mobile-container">
+    <header class="mobile-header">
+      <h1 class="mobile-title">NEON FIGHTER COCKPIT v1.0</h1>
+      <div class="mobile-status">
+        <span class="status-dot-sm pulsing-red" id="mobileStatusDot"></span>
+        <span id="mobileStatusText">CONNECTING...</span>
+      </div>
+    </header>
+
+    <div class="controller-layout">
+      <!-- Left Panel: Steering info & fallback joystick -->
+      <div class="control-panel panel-left">
+        <!-- Calibration trigger -->
+        <button id="calibrateBtn" class="btn-calibrate-floating">CALIBRATE</button>
+
+        <div class="touch-pad-container">
+          <div class="touch-pad-label" id="controlSchemeLabel">TILT FLIGHT ENABLED</div>
+          
+          <!-- Virtual Trackpad Area -->
+          <div class="touch-pad" id="trackpad">
+            <div class="touch-knob" id="knob"></div>
+          </div>
+        </div>
+
+        <!-- Real-time sensor metrics visualizer -->
+        <div class="tilt-data-visualizer">
+          <div class="data-row">
+            <span>PILOT STEER (X):</span>
+            <span id="metricX">0.00</span>
+          </div>
+          <div class="data-row">
+            <span>PILOT PITCH (Y):</span>
+            <span id="metricY">0.00</span>
+          </div>
+          <div class="calibrate-alert-box" id="calibrationMsg">
+            Hold device level & tap CALIBRATE to center.
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel: Fire / Boost Trigger pads -->
+      <div class="control-panel panel-right">
+        <!-- Boost Trigger -->
+        <button id="boostBtn" class="action-btn btn-boost">
+          <span>BOOST</span>
+          <span class="btn-sublabel">HOLD TO THRUST</span>
+        </button>
+
+        <!-- Laser Fire Trigger -->
+        <button id="fireBtn" class="action-btn btn-fire">
+          <span>FIRE</span>
+          <span class="btn-sublabel">TAP TO SHOOT</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reconnect dialog -->
+  <div id="reconnectOverlay" class="mobile-overlay hidden">
+    <h1 class="glow-red">DISCONNECTED</h1>
+    <p class="controller-setup-desc">Connection to the game screen was lost. Please verify the desktop game is still running.</p>
+    <button onclick="window.location.reload();" class="mobile-btn">RECONNECT</button>
+  </div>
+
+  <!-- Socket.io client -->
+  <script src="/socket.io/socket.io.js"></script>
+  <!-- Mobile Controller Logic -->
+  <script src="/mobile.js"></script>
+</body>
+</html>
