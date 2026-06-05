@@ -1,12 +1,12 @@
 :root {
   --bg-dark: #070313;
   --panel-bg: rgba(11, 6, 28, 0.85);
-  
+
   --color-pink: #ff007f;
   --color-cyan: #00f3ff;
   --color-yellow: #ffb800;
   --color-green: #39ff14;
-  
+
   --font-main: 'Outfit', sans-serif;
   --font-mono: 'Share Tech Mono', monospace;
 }
@@ -53,12 +53,14 @@ body {
 /* Screen Panels transition states */
 .screen-panel {
   display: flex;
+  overflow-y: auto;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   width: 100vw;
   height: 100vh;
-  padding: 40px;
+  min-height: 100vh;
+  padding: 40px 0 60px 0;
   opacity: 0;
   transform: scale(0.98);
   transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
@@ -253,7 +255,7 @@ body {
   padding: 15px 30px;
   border-radius: 12px;
   margin-bottom: 25px;
-  box-shadow: 0 5px 25px rgba(0,0,0,0.4);
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.4);
 }
 
 .hud-item {
@@ -306,7 +308,7 @@ body {
 /* Canvas styling */
 .canvas-container {
   position: relative;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   border: 2px solid var(--color-cyan);
   box-shadow: 0 0 35px rgba(0, 243, 255, 0.2);
   border-radius: 10px;
@@ -359,30 +361,34 @@ body {
 }
 
 .completion-content {
-  display: flex;
-  gap: 40px;
-  max-width: 950px;
-  width: 100%;
+
+  width: 92%;
+
+  max-width: 1400px;
+
+  margin: 0 auto;
 }
 
-.leaderboard-card, .stats-summary-card {
+.leaderboard-card,
+.stats-summary-card {
   flex: 1;
   background: var(--panel-bg);
   border: 2px solid rgba(57, 255, 20, 0.3);
   border-radius: 16px;
   padding: 30px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
 }
 
 .stats-summary-card {
   border-color: rgba(0, 243, 255, 0.3);
 }
 
-.leaderboard-card h2, .stats-summary-card h2 {
+.leaderboard-card h2,
+.stats-summary-card h2 {
   font-size: 22px;
   font-family: var(--font-mono);
   margin-bottom: 25px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   padding-bottom: 8px;
   letter-spacing: 1px;
 }
@@ -406,9 +412,9 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 10px 15px;
-  background: rgba(255,255,255,0.03);
+  background: rgba(255, 255, 255, 0.03);
   border-radius: 6px;
-  border: 1px solid rgba(255,255,255,0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .leaderboard-item.first-place {
@@ -439,7 +445,7 @@ body {
   display: flex;
   justify-content: space-between;
   padding: 15px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .stat-row span:first-child {
@@ -477,13 +483,27 @@ body {
 
 /* Animations */
 @keyframes pulse {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
+
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }
 
 @keyframes scaleUp {
-  from { transform: scale(0.8); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .bounce-in {
@@ -491,8 +511,379 @@ body {
 }
 
 @keyframes bounceIn {
-  0% { transform: scale(0.3); opacity: 0; }
-  50% { transform: scale(1.05); opacity: 0.8; }
-  70% { transform: scale(0.9); opacity: 0.9; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+
+  70% {
+    transform: scale(0.9);
+    opacity: 0.9;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
+
+/* =====================================================
+   NEW FEATURE START : LIVE LEADERBOARD
+===================================================== */
+
+.live-leaderboard {
+
+  position: absolute;
+
+  top: 100px;
+
+  right: 25px;
+
+  width: 280px;
+
+  background: rgba(11, 6, 28, 0.92);
+
+  border: 2px solid var(--color-cyan);
+
+  border-radius: 14px;
+
+  padding: 15px;
+
+  z-index: 50;
+
+  box-shadow:
+    0 0 25px rgba(0, 243, 255, 0.35);
+}
+
+.live-leaderboard h3 {
+
+  text-align: center;
+
+  color: var(--color-cyan);
+
+  font-family: var(--font-mono);
+
+  margin-bottom: 12px;
+
+  letter-spacing: 1px;
+}
+
+.live-leaderboard div {
+
+  padding: 8px 0;
+
+  border-bottom:
+    1px solid rgba(255, 255, 255, 0.08);
+
+  font-family: var(--font-mono);
+
+  font-size: 14px;
+}
+
+.live-leaderboard div:last-child {
+
+  border-bottom: none;
+}
+
+/* =====================================================
+   NEW FEATURE END : LIVE LEADERBOARD
+===================================================== */
+
+
+
+/* =====================================================
+   NEW FEATURE START : MVP PLAYER CARD
+===================================================== */
+
+.mvp-banner {
+
+  width: 100%;
+
+  max-width: 1100px;
+
+  margin: 0 auto 30px auto;
+
+  text-align: center;
+
+  padding: 18px;
+
+  border-radius: 18px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 0, 127, 0.12),
+      rgba(0, 243, 255, 0.12)
+    );
+
+  border: 2px solid var(--color-pink);
+
+  box-shadow:
+    0 0 30px rgba(255, 0, 127, 0.25);
+}
+
+.mvp-banner h2 {
+
+  color: var(--color-yellow);
+
+  margin-bottom: 10px;
+
+  font-size: 30px;
+
+  letter-spacing: 2px;
+}
+
+.mvp-banner h3 {
+
+  font-size: 32px;
+
+  margin-bottom: 12px;
+
+  font-weight: 900;
+}
+
+.mvp-banner p {
+
+  font-size: 16px;
+
+  margin: 6px 0;
+
+  color: #ffffff;
+}
+
+/* =====================================================
+   NEW FEATURE END : MVP PLAYER CARD
+===================================================== */
+
+
+
+/* =====================================================
+   NEW FEATURE START : ENHANCED LEADERBOARD
+===================================================== */
+
+.score small {
+
+  display: block;
+
+  margin-top: 4px;
+
+  font-size: 12px;
+
+  color: var(--color-cyan);
+
+  font-family: var(--font-mono);
+}
+
+/* =====================================================
+   NEW FEATURE END : ENHANCED LEADERBOARD
+===================================================== */
+
+/* =====================================================
+   NEW FEATURE START : ACHIEVEMENTS
+===================================================== */
+
+.achievement-panel {
+
+  margin-bottom: 25px;
+
+  padding: 20px;
+
+  border-radius: 14px;
+
+  background:
+    rgba(255, 184, 0, 0.08);
+
+  border:
+    2px solid rgba(255, 184, 0, 0.35);
+
+  text-align: center;
+}
+
+.achievement-panel h2 {
+
+  color:
+    var(--color-yellow);
+
+  margin-bottom: 15px;
+}
+
+.achievement-item {
+
+  margin: 10px 0;
+
+  font-size: 18px;
+}
+
+/* =====================================================
+   NEW FEATURE END : ACHIEVEMENTS
+===================================================== */
+
+
+
+/* =====================================================
+   NEW FEATURE START : ANALYTICS
+===================================================== */
+
+.analytics-panel {
+
+  margin-bottom: 25px;
+
+  padding: 20px;
+
+  border-radius: 14px;
+
+  background:
+    rgba(0, 243, 255, 0.06);
+
+  border:
+    2px solid rgba(0, 243, 255, 0.25);
+
+  text-align: center;
+}
+
+.analytics-panel h2 {
+
+  color:
+    var(--color-cyan);
+
+  margin-bottom: 15px;
+}
+
+.analytics-panel div {
+
+  margin: 8px 0;
+
+  font-size: 17px;
+}
+
+/* =====================================================
+   NEW FEATURE END : ANALYTICS
+===================================================== */
+
+/* =====================================================
+   NEW FEATURE START : COMPLETION LAYOUT FIX
+===================================================== */
+
+.completion-top-row {
+
+  display: flex;
+
+  gap: 20px;
+
+  width: 100%;
+
+  margin-bottom: 20px;
+}
+
+.achievement-panel,
+.analytics-panel {
+
+  flex: 1;
+
+  min-height: 180px;
+}
+
+/* =====================================================
+   NEW FEATURE END : COMPLETION LAYOUT FIX
+===================================================== */
+
+/* =====================================================
+   COMPLETION GRID LAYOUT
+===================================================== */
+
+.completion-grid {
+
+  display: grid;
+
+  grid-template-columns:1fr 1fr;
+
+  gap: 16px;
+
+  margin-top: 15px;
+}
+
+@media (max-width: 1100px) {
+
+  .completion-grid {
+
+    grid-template-columns: 1fr;
+  }
+}
+
+.achievement-panel,
+.analytics-panel,
+.leaderboard-card,
+.stats-summary-card{
+  min-height: 260px;
+}
+
+/* =====================================================
+   NEW FEATURE START : LIVE ACTIVITY FEED
+===================================================== */
+
+.activity-feed-panel {
+
+  position: absolute;
+
+  top: 110px;
+
+  left: 20px;
+
+  width: 320px;
+
+  max-height: 420px;
+
+  overflow-y: auto;
+
+  background:
+    rgba(0, 0, 0, 0.75);
+
+  border:
+    1px solid rgba(0,243,255,0.4);
+
+  border-radius: 14px;
+
+  padding: 15px;
+
+  z-index: 50;
+
+  box-shadow:
+    0 0 20px rgba(0,243,255,0.2);
+}
+
+.activity-feed-panel h3 {
+
+  color: var(--color-cyan);
+
+  margin-bottom: 12px;
+
+  text-align: center;
+
+  font-family: var(--font-mono);
+}
+
+.activity-row {
+
+  padding: 8px;
+
+  border-bottom:
+    1px solid rgba(255,255,255,0.08);
+
+  font-size: 14px;
+
+  line-height: 1.4;
+}
+
+.activity-row:last-child {
+
+  border-bottom: none;
+}
+
+/* =====================================================
+   NEW FEATURE END : LIVE ACTIVITY FEED
+===================================================== */

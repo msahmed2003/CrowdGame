@@ -9,6 +9,15 @@ let currentState = SCREEN_STATE.LOBBY;
 let socket = null;
 let roomCode = '';
 let startTime = null;
+// =====================================================
+// NEW FEATURE START : LIVE LEADERBOARD
+// =====================================================
+
+let liveLeaderboard = [];
+
+// =====================================================
+// NEW FEATURE END : LIVE LEADERBOARD
+// =====================================================
 
 // Canvas assets
 let bgCanvas = null;
@@ -42,15 +51,15 @@ const Sound = {
     const gain = audioCtx.createGain();
     osc.connect(gain);
     gain.connect(audioCtx.destination);
-    
+
     osc.type = 'sine';
     osc.frequency.setValueAtTime(440, audioCtx.currentTime);
     osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.08);
     osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.2);
-    
+
     gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-    
+
     osc.start();
     osc.stop(audioCtx.currentTime + 0.2);
   },
@@ -60,23 +69,23 @@ const Sound = {
     const osc1 = audioCtx.createOscillator();
     const osc2 = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-    
+
     osc1.connect(gain);
     osc2.connect(gain);
     gain.connect(audioCtx.destination);
-    
+
     osc1.type = 'sawtooth';
     osc2.type = 'triangle';
     osc1.frequency.setValueAtTime(261.63, audioCtx.currentTime); // C4
     osc1.frequency.setValueAtTime(329.63, audioCtx.currentTime + 0.15); // E4
     osc1.frequency.setValueAtTime(392.00, audioCtx.currentTime + 0.3); // G4
     osc1.frequency.setValueAtTime(523.25, audioCtx.currentTime + 0.45); // C5
-    
+
     osc2.frequency.setValueAtTime(523.25, audioCtx.currentTime);
-    
+
     gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.2);
-    
+
     osc1.start();
     osc2.start();
     osc1.stop(audioCtx.currentTime + 1.2);
@@ -129,7 +138,7 @@ function updateStars() {
 function drawBackground() {
   bgCtx.fillStyle = '#060313';
   bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
-  
+
   // Dynamic retro horizon glow in lobby state
   if (currentState === SCREEN_STATE.LOBBY) {
     const glowGrad = bgCtx.createRadialGradient(
@@ -210,11 +219,12 @@ function setupConnection() {
 
   // Event: Piece snapped correctly
   socket.on('piece-placed', (data) => {
+    console.log('PIECE PLACED EVENT:', data);
     const { pieceId, correctX, correctY, placedBy, progress, isSolved } = data;
-    
+
     // Snapped piece removes its temporary live dragging marker
     dragPositions.delete(pieceId);
-    
+
     if (puzzleData) {
       const piece = puzzleData.pieces.find(p => p.id === pieceId);
       if (piece) {
@@ -229,22 +239,95 @@ function setupConnection() {
     Sound.playSnap();
     spawnSparks(correctX + (puzzleData.pieceWidth / 2), correctY + (puzzleData.pieceHeight / 2), '#ff007f');
     spawnSparks(correctX + (puzzleData.pieceWidth / 2), correctY + (puzzleData.pieceHeight / 2), '#00f3ff');
-    
+
     // Ticker announcement
-    const ticker = document.getElementById('activityTicker');
-    ticker.textContent = `🎯 ${placedBy} placed piece (${progress}% solved)`;
-    ticker.classList.add('pulse');
-    setTimeout(() => ticker.classList.remove('pulse'), 400);
+    // =====================================================
+    // FIX : ACTIVITY TICKER OPTIONAL
+    // =====================================================
+
+    const ticker =
+      document.getElementById(
+        'activityTicker'
+      );
+
+    if (ticker) {
+
+      ticker.textContent =
+        `🎯 ${placedBy} placed piece (${progress}% solved)`;
+
+      ticker.classList.add('pulse');
+
+      setTimeout(
+        () => ticker.classList.remove('pulse'),
+        400
+      );
+    }
 
     // Update HUD
     document.getElementById('hudProgressFill').style.width = `${progress}%`;
     document.getElementById('hudProgressText').textContent = `${progress}%`;
   });
 
+  // =====================================================
+  // NEW FEATURE START : LIVE LEADERBOARD
+  // =====================================================
+
+  socket.on(
+    'leaderboard-update',
+    (leaderboard) => {
+
+      liveLeaderboard =
+        leaderboard;
+
+      renderLiveLeaderboard();
+    }
+  );
+
+  // =====================================================
+  // NEW FEATURE END : LIVE LEADERBOARD
+  // =====================================================
+
   // Event: Puzzle solved!
   socket.on('activity-complete', (data) => {
     triggerPuzzleCompletion(data);
   });
+
+  // =====================================================
+  // NEW FEATURE START : LIVE ACTIVITY FEED
+  // =====================================================
+
+  socket.on(
+    'activity-feed-update',
+    (feed) => {
+
+      const panel =
+        document.getElementById(
+          'activityFeed'
+        );
+
+      if (!panel) return;
+
+      panel.innerHTML = '';
+
+      feed.forEach(event => {
+
+        const row =
+          document.createElement('div');
+
+        row.className =
+          'activity-row';
+
+        row.textContent =
+          event.message;
+
+        panel.appendChild(row);
+      });
+    }
+  );
+
+  // =====================================================
+  // NEW FEATURE END : LIVE ACTIVITY FEED
+  // =====================================================
 }
 
 // 3. LOBBY UTILITIES
@@ -296,7 +379,7 @@ function startJigsawPuzzle(state) {
     preCachePieceImages(state.pieces);
   }
   puzzleImage.src = state.imageUrl;
-  
+
   // Pre-load image
   puzzleImage.onload = () => {
     console.log('Puzzle source image loaded successfully.');
@@ -434,14 +517,67 @@ function preCachePieceImages(pieces) {
   });
 }
 
+// =====================================================
+// NEW FEATURE START : LIVE LEADERBOARD UI
+// =====================================================
+
+function renderLiveLeaderboard() {
+
+  const board =
+    document.getElementById(
+      'liveLeaderboard'
+    );
+
+  if (!board) return;
+
+  board.innerHTML =
+    '<h3>🏆 LIVE LEADERBOARD</h3>';
+
+  liveLeaderboard
+    .slice(0, 5)
+    .forEach((player, index) => {
+
+      const row =
+        document.createElement('div');
+
+      row.innerHTML = `
+        <span style="
+          color:${player.color};
+          font-weight:bold;
+        ">
+          #${index + 1}
+          ${player.displayName}
+        </span>
+
+        <span style="
+          float:right;
+        ">
+          ${player.score}
+        </span>
+      `;
+
+      board.appendChild(row);
+    });
+}
+
+// =====================================================
+// NEW FEATURE END : LIVE LEADERBOARD UI
+// =====================================================
+
 // 5. SOLVED CELEBRATION
-function triggerPuzzleCompletion({ leaderboard, totalPieces }) {
+function triggerPuzzleCompletion({ leaderboard, totalPieces, completionTime, achievements, analytics }) {
+  console.log('COMPLETION DATA:', {
+    leaderboard,
+    achievements,
+    analytics,
+    completionTime
+  });
   currentState = SCREEN_STATE.COMPLETE;
   Sound.playComplete();
 
   // Calculate solving time
-  const endTime = new Date();
-  const durationSec = Math.round((endTime - startTime) / 1000);
+  // const endTime = new Date();
+  const durationSec = completionTime || Math.round((new Date() - startTime) / 1000);
 
   // Transition views — must add 'active' to bring opacity from 0 → 1
   document.getElementById('gameplayScreen').classList.remove('active');
@@ -456,19 +592,149 @@ function triggerPuzzleCompletion({ leaderboard, totalPieces }) {
   // Render leaderboard list
   const list = document.getElementById('leaderboardList');
   list.innerHTML = '';
-  
+  // =====================================================
+  // NEW FEATURE START : MVP PLAYER
+  // =====================================================
+
+  const mvp =
+    leaderboard[0];
+
+  const mvpBanner =
+    document.getElementById(
+      'mvpBanner'
+    );
+
+  if (mvpBanner && mvp) {
+
+    mvpBanner.innerHTML = `
+    <h2>🏆 MVP PLAYER</h2>
+
+    <h3 style="
+      color:${mvp.color}
+    ">
+      ${mvp.displayName}
+    </h3>
+
+    <p>
+      Score:
+      ${mvp.score}
+    </p>
+
+    <p>
+      Accuracy:
+      ${mvp.accuracy || 0}%
+    </p>
+
+    <p>
+      Pieces:
+      ${mvp.piecesPlaced || 0}
+    </p>
+  `;
+  }
+
+  // =====================================================
+  // NEW FEATURE END : MVP PLAYER
+  // =====================================================
+
+  // =====================================================
+  // NEW FEATURE START : ACHIEVEMENTS
+  // =====================================================
+
+  const achievementPanel =
+    document.getElementById(
+      'achievementPanel'
+    );
+
+  if (
+    achievementPanel &&
+    achievements
+  ) {
+
+    achievementPanel.innerHTML =
+      '<h2>🏅 ACHIEVEMENTS</h2>';
+
+    achievements.forEach(a => {
+
+      achievementPanel.innerHTML += `
+      <div class="achievement-item">
+        ${a.title}
+        —
+        <strong>
+          ${a.player}
+        </strong>
+      </div>
+    `;
+    });
+  }
+
+  // =====================================================
+  // NEW FEATURE END : ACHIEVEMENTS
+  // =====================================================
+
+  // =====================================================
+  // NEW FEATURE START : ANALYTICS
+  // =====================================================
+
+  const analyticsPanel =
+    document.getElementById(
+      'analyticsPanel'
+    );
+
+  if (
+    analyticsPanel &&
+    analytics
+  ) {
+
+    analyticsPanel.innerHTML = `
+
+    <h2>
+      📊 TEAM ANALYTICS
+    </h2>
+
+    <div>
+      Players:
+      ${analytics.totalPlayers}
+    </div>
+
+    <div>
+      Avg Accuracy:
+      ${analytics.averageAccuracy}%
+    </div>
+
+    <div>
+      Total Score:
+      ${analytics.totalScore}
+    </div>
+
+    <div>
+      Total Pieces:
+      ${analytics.totalPieces}
+    </div>
+
+  `;
+  }
+
+  // =====================================================
+  // NEW FEATURE END : ANALYTICS
+  // =====================================================
+
   leaderboard.forEach((player, index) => {
     const item = document.createElement('div');
     item.className = `leaderboard-item ${index === 0 ? 'first-place' : ''}`;
-    
+
     const rankPrefix = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
-    
+
     item.innerHTML = `
       <div class="rank-name">
         <span class="rank">${rankPrefix}</span>
         <span class="name" style="color: ${player.color}">${player.displayName.toUpperCase()}</span>
       </div>
-      <div class="score">${player.score} PTS</div>
+      <div class="score">${player.score} PTS
+      <br>
+      <small>
+      ${player.accuracy || 0}% ACC
+      </small>
+      </div>
     `;
     list.appendChild(item);
   });

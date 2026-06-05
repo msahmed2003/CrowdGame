@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CrowdPlay | Event Big Screen Display</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;900&family=Share+Tech+Mono&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="/screen.css">
   <script src="/socket.io/socket.io.js"></script>
   <script src="/screen.js" defer></script>
 </head>
+
 <body>
   <div class="crt-overlay"></div>
 
@@ -77,44 +80,144 @@
       <canvas id="puzzleCanvas" width="1200" height="800"></canvas>
     </div>
 
-    <!-- Real-time activity ticker -->
-    <div class="activity-ticker" id="activityTicker">
-      SYSTEM ONLINE — Solvers ready
+    <!-- =====================================================
+     NEW FEATURE START : LIVE LEADERBOARD
+===================================================== -->
+
+    <div id="liveLeaderboard" class="live-leaderboard">
+      <h3>🏆 LIVE LEADERBOARD</h3>
     </div>
+
+    <!-- =====================================================
+     NEW FEATURE END : LIVE LEADERBOARD
+===================================================== -->
+
+    <!-- Real-time activity ticker -->
+    <!-- =====================================================
+     NEW FEATURE START : LIVE ACTIVITY FEED
+===================================================== -->
+
+    <div class="activity-feed-panel">
+
+      <h3>LIVE ACTIVITY</h3>
+
+      <div id="activityFeed">
+
+        <div class="activity-row">
+          SYSTEM ONLINE
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- =====================================================
+     NEW FEATURE END : LIVE ACTIVITY FEED
+===================================================== -->
   </div>
 
   <!-- 3. GAME OVER / COMPLETED SCREEN -->
   <div id="completionScreen" class="screen-panel hidden">
+
     <div class="completion-banner">
       <h1 class="bounce-in">PUZZLE SOLVED</h1>
-      <p class="sub-banner">OUTSTANDING COMMUNITY COORDINATION</p>
+      <p class="sub-banner">
+        OUTSTANDING COMMUNITY COORDINATION
+      </p>
     </div>
 
     <div class="completion-content">
-      <div class="leaderboard-card">
-        <h2>🏆 TOP SOLVERS</h2>
-        <div class="leaderboard-list" id="leaderboardList">
-          <!-- Leaderboard item template -->
-        </div>
+
+      <!-- =====================================================
+         MVP PLAYER
+    ====================================================== -->
+
+      <div id="mvpBanner" class="mvp-banner">
+        <!-- Filled dynamically by screen.js -->
       </div>
-      
-      <div class="stats-summary-card">
-        <h2>MISSION ANALYSIS</h2>
-        <div class="stat-row">
-          <span>Total Slices Placed</span>
-          <span class="val" id="totalSlicesPlaced">0</span>
+
+      <!-- =====================================================
+         MAIN COMPLETION GRID
+    ====================================================== -->
+
+      <div class="completion-grid">
+
+        <!-- =====================
+           ACHIEVEMENTS
+      ====================== -->
+
+        <div id="achievementPanel" class="achievement-panel">
+
+          <!-- Filled dynamically -->
         </div>
-        <div class="stat-row">
-          <span>Solving Duration</span>
-          <span class="val" id="solvedDuration">0s</span>
+
+        <!-- =====================
+           TEAM ANALYTICS
+      ====================== -->
+
+        <div id="analyticsPanel" class="analytics-panel">
+
+          <!-- Filled dynamically -->
         </div>
-        <div class="stat-row">
-          <span>System Rank</span>
-          <span class="val neon-cyan">S-CLASS</span>
+
+        <!-- =====================
+           LEADERBOARD
+      ====================== -->
+
+        <div class="leaderboard-card">
+
+          <h2>🏆 TOP SOLVERS</h2>
+
+          <div class="leaderboard-list" id="leaderboardList">
+
+            <!-- Filled dynamically -->
+
+          </div>
+
         </div>
-        <button class="btn" onclick="window.location.reload()">Return to Setup</button>
+
+        <!-- =====================
+           MISSION ANALYSIS
+      ====================== -->
+
+        <div class="stats-summary-card">
+
+          <h2>MISSION ANALYSIS</h2>
+
+          <div class="stat-row">
+            <span>Total Slices Placed</span>
+            <span class="val" id="totalSlicesPlaced">
+              0
+            </span>
+          </div>
+
+          <div class="stat-row">
+            <span>Solving Duration</span>
+            <span class="val" id="solvedDuration">
+              0s
+            </span>
+          </div>
+
+          <div class="stat-row">
+            <span>System Rank</span>
+            <span class="val neon-cyan">
+              S-CLASS
+            </span>
+          </div>
+
+          <button class="btn" onclick="window.location.reload()">
+
+            Return to Setup
+
+          </button>
+
+        </div>
+
       </div>
+
     </div>
+
   </div>
 </body>
+
 </html>
