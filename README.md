@@ -42,6 +42,12 @@ public/mobile.html / .js / .css — player performance tracking, accuracy displa
 Why It Matters
 CrowdPlay was already a solid collaborative experience. These additions layer in just enough competition and feedback to keep players invested from the first piece to the last. Individual contributors get recognized, teams get a clearer picture of how they performed, and spectators have something worth watching throughout.
 
+![image alt](https://github.com/msahmed2003/CrowdGame/blob/2aa54bd6ffd48f2cd01c02fbf9474ece4265be33/Screenshot%202026-06-05%20095813.png)
+![image alt](https://github.com/msahmed2003/CrowdGame/blob/2aa54bd6ffd48f2cd01c02fbf9474ece4265be33/Screenshot%202026-06-05%20100000.png)
+![image alt](https://github.com/msahmed2003/CrowdGame/blob/2aa54bd6ffd48f2cd01c02fbf9474ece4265be33/Screenshot%202026-06-05%20100012.png)
+![image alt](https://github.com/msahmed2003/CrowdGame/blob/2aa54bd6ffd48f2cd01c02fbf9474ece4265be33/WhatsApp%20Image%202026-06-05%20at%2010.01.01.jpeg
+)
+
 ---
 
 ### 🐛 Fixed Admin Dashboard Progress Tracking
@@ -91,6 +97,8 @@ Additional validation and synchronization logic were added to ensure that the da
 ✅ Administrators can accurately monitor activity progress during live gameplay
 
 ✅ Improved reliability of dashboard monitoring features
+
+![image alt](https://github.com/msahmed2003/CrowdGame/blob/2aa54bd6ffd48f2cd01c02fbf9474ece4265be33/Screenshot%202026-06-05%20095829.png)
 
 ---
 
