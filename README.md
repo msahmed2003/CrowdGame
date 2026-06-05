@@ -42,6 +42,8 @@ public/mobile.html / .js / .css — player performance tracking, accuracy displa
 Why It Matters
 CrowdPlay was already a solid collaborative experience. These additions layer in just enough competition and feedback to keep players invested from the first piece to the last. Individual contributors get recognized, teams get a clearer picture of how they performed, and spectators have something worth watching throughout.
 
+---
+
 ### 🐛 Fixed Admin Dashboard Progress Tracking
 
 #### Problem
@@ -90,6 +92,7 @@ Additional validation and synchronization logic were added to ensure that the da
 
 ✅ Improved reliability of dashboard monitoring features
 
+---
 
 ## 🎮 How It Works
 
