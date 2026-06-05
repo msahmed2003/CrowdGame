@@ -6,7 +6,7 @@ CrowdPlay is designed to run in a hybrid environment: a **Big Screen View** (e.g
 
 ---
 
-CrowdPlay — Enhanced Edition
+# CrowdPlay — Enhanced Edition
 This fork builds on the original CrowdPlay experience by introducing real-time player analytics, competitive scoring, and richer post-game insights. The goal is simple: give players more to care about during the game, and more to reflect on after it.
 
 What's New
