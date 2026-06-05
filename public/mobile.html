@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>CrowdPlay | Pilot Controller</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Share+Tech+Mono&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="/mobile.css">
   <script src="/socket.io/socket.io.js"></script>
   <script src="/mobile.js" defer></script>
 </head>
+
 <body class="mobile-body">
   <div class="glow-bg"></div>
   <div class="crt-overlay"></div>
@@ -43,8 +46,9 @@
       <h2 id="welcomeText" class="neon-cyan">WELCOME, PILOT</h2>
     </div>
     <div class="card-body">
-      <p class="desc">You have successfully registered on the event board. Waiting for the coordinator to start the solving activity...</p>
-      
+      <p class="desc">You have successfully registered on the event board. Waiting for the coordinator to start the
+        solving activity...</p>
+
       <div class="joined-indicator">
         <div class="ping-circle"></div>
         <span>Awaiting Launch...</span>
@@ -79,12 +83,12 @@
     <!-- Main puzzle piece workspace -->
     <div class="workspace-card">
       <div class="workspace-label">WORKSPACE: PLACE PIECE</div>
-      
+
       <!-- Interactive drag board -->
       <div id="dragBoard" class="drag-board">
         <!-- Full background grid overlay (populated dynamically in JS) -->
         <div id="gridOverlay" class="grid-overlay"></div>
-        
+
         <!-- Target grid ghost guide map (hidden as board is now full reference) -->
         <div class="target-minimap" id="minimap" style="display: none;">
           <!-- Thumbnail of target position -->
@@ -116,15 +120,32 @@
     </div>
     <div class="card-body">
       <p class="desc text-center">The community has successfully resolved the image parameters. Great job!</p>
-      
+
+      <!-- =====================================================
+     NEW FEATURE START : PLAYER PERFORMANCE
+===================================================== -->
+
       <div class="personal-score-card">
-        <span class="label">YOUR CONTRIBUTION</span>
-        <span class="score-val" id="myContributionsVal">0</span>
-        <span class="score-label">Points Earned</span>
+
+        <span class="label">
+          YOUR PERFORMANCE
+        </span>
+
+        <div id="myContributionsVal" class="player-stats-panel">
+
+          Pieces: 0
+
+        </div>
+
       </div>
-      
+
+      <!-- =====================================================
+     NEW FEATURE END : PLAYER PERFORMANCE
+===================================================== -->
+
       <button class="btn btn-secondary btn-block" onclick="window.location.reload()">Reset Controller</button>
     </div>
   </div>
 </body>
+
 </html>

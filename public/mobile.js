@@ -5,6 +5,19 @@ document.addEventListener('DOMContentLoaded', () => {
   let myColor = '';
   let myDisplayName = '';
   let piecesPlacedCount = 0;
+  // =====================================================
+  // NEW FEATURE START : PLAYER STATISTICS
+  // =====================================================
+
+  let myScore = 0;
+
+  let totalAttempts = 0;
+
+  let myAccuracy = 0;
+
+  // =====================================================
+  // NEW FEATURE END : PLAYER STATISTICS
+  // =====================================================
   let currentAssignedPieces = [];
   let selectedPieceIndex = 0;
 
@@ -23,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const joinForm = document.getElementById('joinForm');
   const displayNameInput = document.getElementById('displayNameInput');
   const joinRoomCode = document.getElementById('joinRoomCode');
-  
+
   const welcomeText = document.getElementById('welcomeText');
   const playerColorVal = document.getElementById('playerColorVal');
 
@@ -62,12 +75,12 @@ document.addEventListener('DOMContentLoaded', () => {
     socket.on('joined-successfully', (data) => {
       myPlayerId = data.playerId;
       myColor = data.color;
-      
+
       // Update UI
       welcomeText.textContent = `WELCOME, ${myDisplayName.toUpperCase()}`;
       playerColorVal.textContent = getNeonColorName(myColor);
       playerColorVal.style.color = myColor;
-      
+
       joinSection.classList.add('hidden');
       waitingSection.classList.remove('hidden');
     });
@@ -83,16 +96,31 @@ document.addEventListener('DOMContentLoaded', () => {
       waitingSection.classList.add('hidden');
       completeSection.classList.add('hidden');
       gameplaySection.classList.remove('hidden');
-      
+      // =====================================================
+      // NEW FEATURE START : RESET STATS
+      // =====================================================
+
+      piecesPlacedCount = 0;
+
+      myScore = 0;
+
+      totalAttempts = 0;
+
+      myAccuracy = 0;
+
+      // =====================================================
+      // NEW FEATURE END : RESET STATS
+      // =====================================================
+
       // Initialise header details
       headerPilotName.textContent = myDisplayName.toUpperCase();
       headerColorDot.style.backgroundColor = myColor;
       headerColorDot.style.boxShadow = `0 0 8px ${myColor}`;
-      
+
       gameProgressPct.textContent = `${data.state.progress}%`;
       currentAssignedPieces = data.state.assignedPieces || [];
       selectedPieceIndex = 0;
-      
+
       // Set background image on dragBoard as a ghost reference
       if (data.state.imageUrl) {
         dragBoard.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), url(${data.state.imageUrl})`;
@@ -128,12 +156,49 @@ document.addEventListener('DOMContentLoaded', () => {
       // Check if this was solved by me
       if (data.placedBy.toLowerCase() === myDisplayName.toLowerCase()) {
         piecesPlacedCount++;
+        // =====================================================
+        // NEW FEATURE START : SCORE TRACKING
+        // =====================================================
+
+        myScore += 100;
+
+        totalAttempts++;
+
+        myAccuracy =
+          Math.round(
+            (
+              piecesPlacedCount /
+              totalAttempts
+            ) * 100
+          );
+
+        // =====================================================
+        // NEW FEATURE END : SCORE TRACKING
+        // =====================================================
+
         triggerHapticFeedback(true);
       }
     });
 
     socket.on('placement-incorrect', (data) => {
       triggerHapticFeedback(false);
+      // =====================================================
+      // NEW FEATURE START : ACCURACY TRACKING
+      // =====================================================
+
+      totalAttempts++;
+
+      myAccuracy =
+        Math.round(
+          (
+            piecesPlacedCount /
+            totalAttempts
+          ) * 100
+        );
+
+      // =====================================================
+      // NEW FEATURE END : ACCURACY TRACKING
+      // =====================================================
       // Find matching piece and run shake animation
       const el = document.getElementById(data.pieceId);
       if (el) {
@@ -142,11 +207,60 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    socket.on('activity-complete', () => {
-      gameplaySection.classList.add('hidden');
-      completeSection.classList.remove('hidden');
-      myContributionsVal.textContent = piecesPlacedCount;
-    });
+    socket.on(
+      'activity-complete',
+      (data) => {
+
+        gameplaySection.classList.add(
+          'hidden'
+        );
+
+        completeSection.classList.remove(
+          'hidden'
+        );
+
+        let rank = '-';
+
+        if (
+          data &&
+          data.leaderboard
+        ) {
+
+          const myIndex =
+            data.leaderboard.findIndex(
+              player =>
+                player.displayName
+                  .toLowerCase() ===
+                myDisplayName
+                  .toLowerCase()
+            );
+
+          if (myIndex >= 0) {
+            rank = myIndex + 1;
+          }
+        }
+
+        myContributionsVal.innerHTML = `
+      <strong>Pieces:</strong>
+      ${piecesPlacedCount}
+
+      <br><br>
+
+      <strong>Score:</strong>
+      ${myScore}
+
+      <br><br>
+
+      <strong>Accuracy:</strong>
+      ${myAccuracy}%
+
+      <br><br>
+
+      <strong>Rank:</strong>
+      #${rank}
+    `;
+      }
+    );
 
     socket.on('host-disconnected', () => {
       alert('Event Big Screen disconnected. Returning to entry screen.');
@@ -185,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const percentHeight = 100 / puzzleRows;
     el.style.width = `${percentWidth}%`;
     el.style.height = `${percentHeight}%`;
-    
+
     // Position at the bottom initially, centered horizontally
     el.style.left = '50%';
     el.style.top = '75%';
@@ -205,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
       currentAssignedPieces.forEach((piece, idx) => {
         const tab = document.createElement('div');
         tab.className = `piece-tab ${idx === selectedPieceIndex ? 'active' : ''}`;
-        
+
         tab.innerHTML = `
           <div class="piece-tab-thumb">
             <img src="${piece.imageUrl}" alt="Piece Thumbnail" draggable="false" />
@@ -215,14 +329,14 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="tab-target">Row ${piece.row + 1}, Col ${piece.col + 1}</span>
           </div>
         `;
-        
+
         tab.addEventListener('click', () => {
           if (selectedPieceIndex !== idx) {
             selectedPieceIndex = idx;
             renderAssignedPieces();
           }
         });
-        
+
         pieceSelectorContainer.appendChild(tab);
       });
     }
@@ -275,7 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Snap to the nearest grid cell to remove guesswork
       const cellWidth = rect.width / puzzleCols;
       const cellHeight = rect.height / puzzleRows;
-      
+
       const targetCol = Math.max(0, Math.min(puzzleCols - 1, Math.floor(touchX / cellWidth)));
       const targetRow = Math.max(0, Math.min(puzzleRows - 1, Math.floor(touchY / cellHeight)));
 
