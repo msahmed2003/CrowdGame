@@ -53,6 +53,19 @@ function initSockets(io) {
           status: room.status
         });
 
+        // =====================================================
+        // NEW FEATURE START : SEND FEED HISTORY
+        // =====================================================
+
+        socket.emit(
+          'activity-feed-update',
+          room.activityFeed || []
+        );
+
+        // =====================================================
+        // NEW FEATURE END : SEND FEED HISTORY
+        // =====================================================
+
         // If the activity was already started (admin started before screen opened),
         // push the current full puzzle state to the screen immediately.
         if (room.activity) {
@@ -89,11 +102,33 @@ function initSockets(io) {
         displayName: result.participant.displayName
       });
 
+      // =====================================================
+      // NEW FEATURE START : LIVE FEED
+      // =====================================================
+
+      roomManager.addActivity(
+        roomCode,
+        `🧩 ${displayName} joined the puzzle`
+      );
+
+      // =====================================================
+      // NEW FEATURE END : LIVE FEED
+      // =====================================================
+
       // Broadcast updated participant list to everyone in the room
       const room = roomManager.getRoom(roomCode);
       io.to(roomCode).emit('room-update', {
         status: room.status,
         participantsCount: roomManager.getConnectedCount(roomCode)
+      });
+
+      // =====================================================
+      // FIX ADMIN DASHBOARD : PLAYER COUNT
+      // =====================================================
+
+      io.emit('admin-player-count', {
+        count: roomManager.getConnectedCount(roomCode),
+        displayName: result.participant.displayName
       });
 
       // If activity is already running, send the starting state immediately to the new player
@@ -139,6 +174,9 @@ function initSockets(io) {
         socket.emit('error-message', result.error);
         return;
       }
+      // ===== NEW FEATURE: TIMER START =====
+      room.startedAt = Date.now();
+      // ===== END =====
 
       // Notify host and all players that the activity has started
       io.to(room.hostSocketId).emit('activity-start', {
@@ -202,22 +240,280 @@ function initSockets(io) {
           isSolved: result.isSolved
         });
 
+        // =====================================================
+        // FIX ADMIN DASHBOARD : PROGRESS
+        // =====================================================
+
+        io.emit('piece-placed', {
+          correct: true,
+          placedBy: result.placedBy,
+          progress: result.progress
+        });
+
         // Send a fresh set of assigned pieces specifically to the placing player
         socket.emit('assign-pieces', {
           assignedPieces: room.activity.getStateForPlayer(socket.playerId).assignedPieces
         });
 
-        // If solved, broadcast game completion
-        if (result.isSolved) {
-          // Sort participants by score for the final leaderboard
-          const leaderboard = Array.from(room.participants.values())
-            .map(p => ({ displayName: p.displayName, score: p.score, color: p.color }))
-            .sort((a, b) => b.score - a.score);
+        // =====================================================
+        // NEW FEATURE START : LIVE FEED
+        // =====================================================
 
-          io.to(socket.roomCode).emit('activity-complete', {
-            leaderboard,
-            totalPieces: room.activity.totalPieces
-          });
+        roomManager.addActivity(
+          socket.roomCode,
+          `🎯 ${player.displayName} placed a puzzle piece`
+        );
+
+        // =====================================================
+        // NEW FEATURE END : LIVE FEED
+        // =====================================================
+
+        // =====================================================
+        // NEW FEATURE START : PROGRESS FEED
+        // =====================================================
+
+        const progress = Math.round(result.progress);
+
+        if (progress === 25) {
+          roomManager.addActivity(
+            socket.roomCode,
+            '⚡ Puzzle is 25% complete'
+          );
+        }
+
+        if (progress === 50) {
+          roomManager.addActivity(
+            socket.roomCode,
+            '⚡ Puzzle is 50% complete'
+          );
+        }
+
+        if (progress === 75) {
+          roomManager.addActivity(
+            socket.roomCode,
+            '⚡ Puzzle is 75% complete'
+          );
+        }
+
+        // =====================================================
+        // NEW FEATURE END : PROGRESS FEED
+        // =====================================================
+
+        // =====================================================
+        // NEW FEATURE START : LIVE LEADERBOARD
+        // =====================================================
+
+        const liveLeaderboard =
+          Array.from(room.participants.values())
+            .map(p => ({
+              displayName: p.displayName,
+              score: p.score,
+              color: p.color,
+
+              piecesPlaced:
+                p.correctPlacements || 0,
+
+              accuracy:
+                p.totalAttempts > 0
+                  ? Math.round(
+                    (
+                      p.correctPlacements /
+                      p.totalAttempts
+                    ) * 100
+                  )
+                  : 0
+            }))
+            .sort(
+              (a, b) =>
+                b.score - a.score
+            );
+
+        io.to(socket.roomCode).emit(
+          'leaderboard-update',
+          liveLeaderboard
+        );
+
+        // =====================================================
+        // NEW FEATURE END : LIVE LEADERBOARD
+        // =====================================================
+
+        if (result.isSolved) {
+
+          // =====================================================
+          // NEW FEATURE START : LIVE FEED
+          // =====================================================
+
+          roomManager.addActivity(
+            socket.roomCode,
+            '🏆 Puzzle solved successfully!'
+          );
+
+          // =====================================================
+          // NEW FEATURE END : LIVE FEED
+          // =====================================================
+
+          // =====================================================
+          // NEW FEATURE START : COMPLETION TIMER
+          // =====================================================
+
+          const completionTime =
+            room.startedAt
+              ? Math.floor(
+                (
+                  Date.now() -
+                  room.startedAt
+                ) / 1000
+              )
+              : 0;
+
+          // =====================================================
+          // NEW FEATURE END : COMPLETION TIMER
+          // =====================================================
+
+
+          // =====================================================
+          // NEW FEATURE START : MVP STATISTICS
+          // =====================================================
+
+          const leaderboard =
+            Array.from(
+              room.participants.values()
+            )
+              .map(p => ({
+                displayName:
+                  p.displayName,
+
+                score:
+                  p.score,
+
+                color:
+                  p.color,
+
+                piecesPlaced:
+                  p.correctPlacements || 0,
+
+                accuracy:
+                  p.totalAttempts > 0
+                    ? Math.round(
+                      (
+                        p.correctPlacements /
+                        p.totalAttempts
+                      ) * 100
+                    )
+                    : 0
+              }))
+              .sort(
+                (a, b) =>
+                  b.score - a.score
+              );
+
+          // =====================================================
+          // NEW FEATURE END : MVP STATISTICS
+          // =====================================================
+
+          // =====================================================
+          // NEW FEATURE START : ACHIEVEMENTS
+          // =====================================================
+
+          const achievements = [];
+
+          if (leaderboard.length > 0) {
+
+            achievements.push({
+              title: '🏆 Puzzle Master',
+              player: leaderboard[0].displayName
+            });
+
+            const bestAccuracy =
+              [...leaderboard]
+                .sort(
+                  (a, b) =>
+                    b.accuracy - a.accuracy
+                )[0];
+
+            achievements.push({
+              title: '🎯 Sharpshooter',
+              player: bestAccuracy.displayName
+            });
+
+            const mostPieces =
+              [...leaderboard]
+                .sort(
+                  (a, b) =>
+                    b.piecesPlaced - a.piecesPlaced
+                )[0];
+
+            achievements.push({
+              title: '⚡ Speed Builder',
+              player: mostPieces.displayName
+            });
+          }
+
+          // =====================================================
+          // NEW FEATURE END : ACHIEVEMENTS
+          // =====================================================
+
+
+
+          // =====================================================
+          // NEW FEATURE START : TEAM ANALYTICS
+          // =====================================================
+
+          const analytics = {
+
+            totalPlayers:
+              room.participants.size,
+
+            averageAccuracy:
+              leaderboard.length
+                ? Math.round(
+                  leaderboard.reduce(
+                    (sum, p) =>
+                      sum + p.accuracy,
+                    0
+                  ) / leaderboard.length
+                )
+                : 0,
+
+            totalScore:
+              leaderboard.reduce(
+                (sum, p) =>
+                  sum + p.score,
+                0
+              ),
+
+            totalPieces:
+              room.activity.totalPieces
+          };
+
+          // =====================================================
+          // NEW FEATURE END : TEAM ANALYTICS
+          // =====================================================
+
+
+          // =====================================================
+          // NEW FEATURE START : COMPLETION PAYLOAD
+          // =====================================================
+
+          io.to(socket.roomCode).emit(
+            'activity-complete',
+            {
+              leaderboard,
+
+              totalPieces:
+                room.activity.totalPieces,
+
+              completionTime,
+
+              achievements,
+
+              analytics
+            }
+          );
+
+          // =====================================================
+          // NEW FEATURE END : COMPLETION PAYLOAD
+          // =====================================================
 
           room.status = 'completed';
         }

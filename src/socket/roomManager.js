@@ -17,7 +17,7 @@ class RoomManager {
   constructor(io) {
     this.io = io;
     this.rooms = new Map(); // roomCode -> roomState
-    
+
     // Subscribe to Redis pubsub if Redis is running for multi-server synchronization
     if (!redisService.isMock()) {
       this.initRedisPubSub();
@@ -48,7 +48,7 @@ class RoomManager {
   async createRoom(hostSocketId, customCode = null) {
     const roomCode = customCode ? customCode.toUpperCase() : this.generateRoomCode();
     const roomId = crypto.randomUUID();
-    
+
     const roomState = {
       id: roomId,
       roomCode,
@@ -56,6 +56,26 @@ class RoomManager {
       status: 'waiting', // waiting, active, completed
       participants: new Map(), // playerId -> participant object
       activity: null,
+      // =====================================================
+      // NEW FEATURE START : TIMER
+      // =====================================================
+
+      startedAt: null,
+
+      // =====================================================
+      // NEW FEATURE END : TIMER
+      // =====================================================
+
+      // =====================================================
+      // NEW FEATURE START : LIVE ACTIVITY FEED
+      // =====================================================
+
+      activityFeed: [],
+
+      // =====================================================
+      // NEW FEATURE END : LIVE ACTIVITY FEED
+      // =====================================================
+
       createdAt: new Date()
     };
 
@@ -96,10 +116,10 @@ class RoomManager {
     }
 
     const playerId = crypto.createHash('md5').update(displayName.toLowerCase().trim()).digest('hex');
-    
+
     // Check if participant already exists in the room (handles reconnection)
     let participant = room.participants.get(playerId);
-    
+
     if (participant) {
       // Reconnection
       participant.socketId = socketId;
@@ -109,16 +129,48 @@ class RoomManager {
       // New Player Join
       const color = NEON_COLORS[room.participants.size % NEON_COLORS.length];
       participant = {
+
         id: playerId,
+
         displayName,
+
         color,
+
         socketId,
+
         score: 0,
+
+        // =====================================================
+        // NEW FEATURE START : MVP + ACCURACY TRACKING
+        // =====================================================
+
+        correctPlacements: 0,
+
+        totalAttempts: 0,
+
+        // =====================================================
+        // NEW FEATURE END : MVP + ACCURACY TRACKING
+        // =====================================================
+
         isConnected: true,
+
         joinedAt: new Date()
       };
       room.participants.set(playerId, participant);
       console.log(`Player ${displayName} joined room ${roomCode}`);
+
+      // =====================================================
+      // NEW FEATURE START : FEED EVENT
+      // =====================================================
+
+      this.addActivity(
+        roomCode,
+        `🧩 ${displayName} joined the room`
+      );
+
+      // =====================================================
+      // NEW FEATURE END : FEED EVENT
+      // =====================================================
 
       // Save to database
       if (db) {
@@ -163,13 +215,13 @@ class RoomManager {
       // 1. Check if host disconnected
       if (room.hostSocketId === socketId) {
         console.log(`Host disconnected from room: ${roomCode}`);
-        
+
         // Notify all participants
         this.io.to(roomCode).emit('host-disconnected');
-        
+
         // Delete the room
         this.rooms.delete(roomCode);
-        
+
         if (db) {
           db('rooms')
             .where({ id: room.id })
@@ -183,8 +235,20 @@ class RoomManager {
       for (const [playerId, p] of room.participants.entries()) {
         if (p.socketId === socketId) {
           console.log(`Player ${p.displayName} disconnected from room: ${roomCode}`);
+          // =====================================================
+          // NEW FEATURE START : FEED EVENT
+          // =====================================================
+
+          this.addActivity(
+            roomCode,
+            `📴 ${p.displayName} disconnected`
+          );
+
+          // =====================================================
+          // NEW FEATURE END : FEED EVENT
+          // =====================================================
           p.isConnected = false;
-          
+
           if (room.activity) {
             room.activity.onPlayerLeave(p);
           }
@@ -203,7 +267,7 @@ class RoomManager {
             displayName: p.displayName,
             count: this.getConnectedCount(roomCode)
           });
-          
+
           return;
         }
       }
@@ -216,7 +280,30 @@ class RoomManager {
     if (!room) return { success: false, error: 'Room not found' };
 
     room.status = 'active';
-    
+
+    // =====================================================
+    // NEW FEATURE START : FEED EVENT
+    // =====================================================
+
+    this.addActivity(
+      roomCode,
+      '🚀 Puzzle challenge started'
+    );
+
+    // =====================================================
+    // NEW FEATURE END : FEED EVENT
+    // =====================================================
+
+    // =====================================================
+    // NEW FEATURE START : COMPLETION TIMER
+    // =====================================================
+
+    room.startedAt = Date.now();
+
+    // =====================================================
+    // NEW FEATURE END : COMPLETION TIMER
+    // =====================================================
+
     // Dynamically instantiate activity class
     let ActivityClass;
     if (activityType === 'jigsaw') {
@@ -248,6 +335,46 @@ class RoomManager {
 
     return { success: true };
   }
+
+  // =====================================================
+  // NEW FEATURE START : LIVE ACTIVITY FEED
+  // =====================================================
+
+  addActivity(roomCode, message) {
+
+    const room = this.getRoom(roomCode);
+
+    if (!room) return;
+
+    room.activityFeed.unshift({
+      message,
+      timestamp: Date.now()
+    });
+
+    // Keep last 15 events
+    if (room.activityFeed.length > 15) {
+      room.activityFeed.pop();
+    }
+
+    // Push update to all clients
+    this.io.to(roomCode).emit(
+      'activity-feed-update',
+      room.activityFeed
+    );
+  }
+
+  getActivityFeed(roomCode) {
+
+    const room = this.getRoom(roomCode);
+
+    if (!room) return [];
+
+    return room.activityFeed;
+  }
+
+  // =====================================================
+  // NEW FEATURE END : LIVE ACTIVITY FEED
+  // =====================================================
 
   // Sync state to Redis cache
   async syncRoomToRedis(roomCode) {

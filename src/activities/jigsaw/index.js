@@ -28,14 +28,14 @@ class JigsawActivity extends BaseActivity {
     }
     this.rows = config.rows || 4;
     this.cols = config.cols || 6;
-    
+
     // Snap tolerance (in pixels) on the 1200x800 canvas
-    this.tolerance = config.tolerance || 40; 
+    this.tolerance = config.tolerance || 40;
   }
 
   async onStart() {
     console.log(`Starting Jigsaw Activity for room ${this.roomCode}...`);
-    
+
     // Generate default puzzle image if it doesn't exist
     await this.ensureDefaultImage();
 
@@ -108,7 +108,7 @@ class JigsawActivity extends BaseActivity {
   async ensureDefaultImage() {
     const uploadsDir = path.join(__dirname, '../../../public/uploads');
     const defaultImagePath = path.join(uploadsDir, 'default-puzzle.png');
-    
+
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
     }
@@ -183,15 +183,15 @@ class JigsawActivity extends BaseActivity {
     const playerPieces = this.pieces.filter(p => p.assignedTo === playerId && !p.isPlaced);
     const quota = 2; // assign 2 pieces at a time
     const needed = quota - playerPieces.length;
-    
+
     if (needed <= 0) return;
 
     // Get unplaced and unassigned pieces
     const pool = this.pieces.filter(p => !p.isPlaced && !p.assignedTo);
-    
+
     // Sort pool randomly
     const shuffled = pool.sort(() => 0.5 - Math.random());
-    
+
     // Take what is needed
     const toAssign = shuffled.slice(0, needed);
     toAssign.forEach(p => {
@@ -214,10 +214,22 @@ class JigsawActivity extends BaseActivity {
     if (piece.isPlaced) return { success: false, error: 'Piece already placed' };
     if (piece.assignedTo !== player.id) return { success: false, error: 'Piece not assigned to you' };
 
+    // =====================================================
+    // NEW FEATURE START : ACCURACY TRACKING
+    // Track every placement attempt
+    // =====================================================
+
+    player.totalAttempts =
+      (player.totalAttempts || 0) + 1;
+
+    // =====================================================
+    // NEW FEATURE END : ACCURACY TRACKING
+    // =====================================================
+
     // Calculate distance to correct position
     const dx = Math.abs(currentX - piece.correctX);
     const dy = Math.abs(currentY - piece.correctY);
-    
+
     const isCorrect = dx <= this.tolerance && dy <= this.tolerance;
 
     if (isCorrect) {
@@ -228,15 +240,27 @@ class JigsawActivity extends BaseActivity {
       piece.placedBy = player.id;
       piece.placedByName = player.displayName;
       piece.assignedTo = null;
-      
+
       this.piecesPlaced++;
-      
+
       // Update participant score
       player.score += 100; // 100 points for correct placement
-      
+
+      // New Feature Start
+      player.correctPlacements = (player.correctPlacements || 0) + 1;
+
+      const accuracy =
+        Math.round(
+          (
+            player.correctPlacements /
+            player.totalAttempts
+          ) * 100
+        );
+      // new feature end
+
       // Assign a new piece to the player
       this.assignPiecesToPlayer(player.id);
-      
+
       // Check if puzzle is fully solved
       const isSolved = this.piecesPlaced === this.totalPieces;
       if (isSolved) {
@@ -251,6 +275,18 @@ class JigsawActivity extends BaseActivity {
         correctY: piece.correctY,
         placedBy: player.displayName,
         score: player.score,
+        // =====================================================
+        // NEW FEATURE START : PLAYER STATS
+        // =====================================================
+
+        accuracy,
+
+        piecesPlaced:
+          player.correctPlacements,
+
+        // =====================================================
+        // NEW FEATURE END : PLAYER STATS
+        // =====================================================
         isSolved,
         progress: this.getProgress()
       };
@@ -258,7 +294,7 @@ class JigsawActivity extends BaseActivity {
       // Wrong placement - track position and update player score (slight penalty or just sync coordinates)
       piece.currentX = currentX;
       piece.currentY = currentY;
-      
+
       return {
         success: true,
         correct: false,
