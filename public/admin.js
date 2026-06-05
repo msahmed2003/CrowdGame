@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log('Admin socket connected.');
     });
 
-    socket.on('player-joined', (data) => {
+    socket.on('admin-player-count', (data) => {
       consoleLogMsg(`Player '${data.displayName}' connected.`);
       attendeesCount.textContent = data.count;
     });
