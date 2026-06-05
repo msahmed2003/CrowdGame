@@ -6,6 +6,91 @@ CrowdPlay is designed to run in a hybrid environment: a **Big Screen View** (e.g
 
 ---
 
+CrowdPlay — Enhanced Edition
+This fork builds on the original CrowdPlay experience by introducing real-time player analytics, competitive scoring, and richer post-game insights. The goal is simple: give players more to care about during the game, and more to reflect on after it.
+
+What's New
+Live Leaderboard
+A leaderboard runs alongside gameplay, updating in real time each time a player successfully places a piece. It shows each participant's current rank, score, accuracy percentage, and total puzzle contributions — giving everyone a sense of where they stand without interrupting the flow of play.
+MVP Recognition
+When the puzzle is completed, the top-performing player is spotlighted as the MVP. The panel surfaces their name, score, accuracy, and piece count — a small but meaningful way to acknowledge standout effort.
+Achievements
+Three performance-based achievements are awarded at the end of each session:
+AchievementCriteriaPuzzle MasterHighest overall scoreSharpshooterHighest placement accuracySpeed BuilderMost pieces placed
+Team Analytics Dashboard
+The big screen displays a team-wide summary once the puzzle is solved, covering total players, average accuracy, combined score, pieces placed, and total completion time. It gives the room a shared moment to see how they performed together.
+Accuracy Tracking
+Every placement attempt — successful or not — is recorded. Accuracy is calculated as correct placements divided by total attempts, expressed as a percentage. This figure appears both on the leaderboard during play and on the completion screen afterward.
+Completion Timer
+The session timer starts when the activity begins and stops the moment the puzzle is solved. That duration feeds into the post-game analytics and gives teams a benchmark to improve against.
+Live Activity Feed
+The big screen also shows a running feed of session events as they happen — players joining, pieces being placed, progress milestones, and the final completion moment. It keeps spectators engaged and gives the room a shared narrative thread throughout the session.
+
+Files Modified
+Backend
+
+src/socket/index.js — leaderboard updates, achievement and analytics generation, activity feed events, completion timer
+src/socket/roomManager.js — per-player stat tracking, activity feed storage, timing support
+src/activities/jigsaw/index.js — accuracy calculations, contribution tracking, scoring
+
+Frontend
+
+public/screen.html / .js / .css — leaderboard, MVP panel, achievement panel, analytics dashboard, activity feed
+public/mobile.html / .js / .css — player performance tracking, accuracy display, contribution stats
+
+
+Why It Matters
+CrowdPlay was already a solid collaborative experience. These additions layer in just enough competition and feedback to keep players invested from the first piece to the last. Individual contributors get recognized, teams get a clearer picture of how they performed, and spectators have something worth watching throughout.
+
+### 🐛 Fixed Admin Dashboard Progress Tracking
+
+#### Problem
+
+The Admin Dashboard's puzzle progress indicator remained at **0%** throughout gameplay, even when players successfully placed puzzle pieces and the puzzle was progressing normally on the Big Screen display.
+
+Example:
+
+```text
+BIG SCREEN:
+Puzzle Progress = 50%
+
+ADMIN DASHBOARD:
+Puzzle Progress = 0%
+```
+
+#### Investigation
+
+The puzzle state and progress calculations were functioning correctly, as evidenced by:
+
+* Puzzle pieces snapping into place correctly
+* Big Screen progress updates working as expected
+* Puzzle completion being detected successfully
+
+The issue was isolated to the Admin Dashboard's progress monitoring logic.
+
+#### Root Cause
+
+The Admin Dashboard was listening for puzzle progress updates through Socket.IO events, but the expected progress data was not being received or processed correctly.
+
+As a result, the dashboard UI never updated the progress percentage despite the underlying game state changing.
+
+#### Solution
+
+The event flow between the game activity and the Admin Dashboard was reviewed and updated to ensure progress updates were properly transmitted and reflected in the dashboard interface.
+
+Additional validation and synchronization logic were added to ensure that the dashboard receives accurate progress information during gameplay.
+
+#### Result
+
+✅ Real-time puzzle progress now displays correctly on the Admin Dashboard
+
+✅ Dashboard statistics remain synchronized with the Big Screen display
+
+✅ Administrators can accurately monitor activity progress during live gameplay
+
+✅ Improved reliability of dashboard monitoring features
+
+
 ## 🎮 How It Works
 
 ```mermaid
